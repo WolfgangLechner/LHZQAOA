@@ -14,6 +14,9 @@ The _challenge_ is that in order to program universal optimization problems the 
 
 ![Alt text](img/illustration.png?raw=true "Illustration")
 
+The optimization problem is an all-to-all connected Ising model (left). This is translated via LHZ to a nearest neigbhor model with problem-independent interactions and local fields that contain the optimization problem (middle). Using QAOA, this translates to a model with only nearest neighbor CNOT and RZ gates (right). 
+
+The LHZQAOA contains 3 terms where interactions and programmable local fields can be separated:
 
 <a href="https://www.codecogs.com/eqnedit.php?latex=U_x=&space;\prod_{i=1}^K&space;e^{\beta&space;\sigma_x^{(i)}}" target="_blank"><img src="https://latex.codecogs.com/gif.latex?U_x=&space;\prod_{i=1}^K&space;e^{\beta&space;\sigma_x^{(i)}}" title="U_x= \prod_{i=1}^K e^{\beta \sigma_x^{(i)}}" /></a>,
 
@@ -22,6 +25,8 @@ The _challenge_ is that in order to program universal optimization problems the 
 and 
 
 <a href="https://www.codecogs.com/eqnedit.php?latex=U_p=&space;\prod_{i=1}^K&space;e^{\gamma&space;\sigma_z^{(i)}&space;}" target="_blank"><img src="https://latex.codecogs.com/gif.latex?U_p=&space;\prod_{i=1}^K&space;e^{\gamma&space;\sigma_z^{(i)}&space;}" title="U_p= \prod_{i=1}^K e^{\gamma \sigma_z^{(i)} }" /></a>
+
+The code is a modified version of the MAXCUT example using LHZQAOA. The FOREST gate-compiler decomposes the constraint unitary with the 4-body interactions to 6 CNOT gates and 1 RZ gate and no ancillas are required. Remarkably, these CNOT gates are on a flat graph. In the illustration, the red lines indicate the 4-body term in the top plaquette with the sequence: CNOT 1 3, CNOT 3 4, CNOT 4 5, RZ (-2) 5,  CNOT 4 5, CNOT 3 4, CNOT 1 3. 
 
 
  [1] http://advances.sciencemag.org/content/1/9/e1500838
