@@ -12,7 +12,7 @@ and
 
 The _challenge_ is that in order to program universal optimization problems the interaction matrix J_ij is all-to-all. A possible solution for that are swap gates to shuffle qubits around which limit the speed of the calculation. As an alternative we propose to make use of the local Hamiltonian Ref. [1] to construct the modified LHZQAOA. The qubit layout is 
 
-![Alt text](img/illustration.pdf?raw=true "Illustration")
+![Alt text](img/illustration.png?raw=true "Illustration")
 
 
 <a href="https://www.codecogs.com/eqnedit.php?latex=U_x=&space;\prod_{i=1}^K&space;e^{\beta&space;\sigma_x^{(i)}}" target="_blank"><img src="https://latex.codecogs.com/gif.latex?U_x=&space;\prod_{i=1}^K&space;e^{\beta&space;\sigma_x^{(i)}}" title="U_x= \prod_{i=1}^K e^{\beta \sigma_x^{(i)}}" /></a>,
