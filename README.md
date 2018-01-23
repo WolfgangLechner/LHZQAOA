@@ -26,7 +26,7 @@ and
 
 <a href="https://www.codecogs.com/eqnedit.php?latex=U_p=&space;\prod_{i=1}^K&space;e^{\gamma&space;\sigma_z^{(i)}&space;}" target="_blank"><img src="https://latex.codecogs.com/gif.latex?U_p=&space;\prod_{i=1}^K&space;e^{\gamma&space;\sigma_z^{(i)}&space;}" title="U_p= \prod_{i=1}^K e^{\gamma \sigma_z^{(i)} }" /></a>
 
-The code is a modified version of the MAXCUT example using LHZQAOA with a sequence U = U_x U_c U_p U_x U_c U_p. The FOREST gate-compiler decomposes the constraint unitary U_c with the 4-body interactions to 6 CNOT gates and 1 RZ gate while no(!) ancillas are required. Remarkably, these CNOT gates are also on a flat graph. In the illustration, the red lines indicate the 4-body term in the top plaquette with the sequence: CNOT 1 3, CNOT 3 4, CNOT 4 5, RZ (-2) 5,  CNOT 4 5, CNOT 3 4, CNOT 1 3. 
+The code is a modified version of the MAXCUT example using LHZQAOA with a sequence U = U_x U_c U_p U_x U_c U_p. The FOREST gate-compiler decomposes the constraint unitary U_c with the 4-body interactions to 6 CNOT gates and 1 RZ gate while no(!) ancillas are required. Remarkably, these CNOT gates are also on a flat graph. In the illustration, the red lines indicate the 4-body term in the top plaquette with the sequence: CNOT 1 3, CNOT 3 4, CNOT 4 5, RZ (-2) 5,  CNOT 4 5, CNOT 3 4, CNOT 1 3. The indices in the Figure are the same as in the code. 
 
 
  [1] http://advances.sciencemag.org/content/1/9/e1500838
