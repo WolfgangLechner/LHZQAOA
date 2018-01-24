@@ -10,7 +10,7 @@ and
 
 <a href="https://www.codecogs.com/eqnedit.php?latex=U_c=&space;\prod_{i<j}&space;e^{\beta&space;J_{ij}\sigma_z^{(i)}\sigma_z^{(j)}}" target="_blank"><img src="https://latex.codecogs.com/gif.latex?U_c=&space;\prod_{i<j}&space;e^{\beta&space;J_{ij}\sigma_z^{(i)}\sigma_z^{(j)}}" title="U_c= \prod_{i<j} e^{\beta J_{ij}\sigma_z^{(i)}\sigma_z^{(j)}}" /></a>
 
-The _challenge_ is that in order to program any universal optimization problems the interaction matrix J_ij has to be all-to-all. A possible solution for that are swap gates to shuffle qubits around which limits the speed of the calculation. As an alternative we propose to make use of the local Hamiltonian Ref. [1] to construct the modified LHZQAOA which introduces an quadratid overhead in qubits. The qubit layout is 
+The _challenge_ is that in order to program any universal optimization problems the interaction matrix J_ij has to be all-to-all. A possible solution for that are swap gates to shuffle qubits around which limits the speed of the calculation. As an alternative we propose to make use of the local Hamiltonian Ref. [1] to construct the modified LHZQAOA which introduces an quadratic overhead in qubits. The qubit layout is 
 
 ![Alt text](img/illustration.png?raw=true "Illustration")
 
