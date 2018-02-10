@@ -212,8 +212,7 @@ class LHZQAOA(object):
         cost_ham = reduce(lambda x, y: x + y, (self.constraint_ham + self.localfield_ham))
         # maximizing the cost function!
         param_prog = self.get_parameterized_program()
-        result = vqe.vqe_run(param_prog, cost_ham, stacked_params, qvm=self.qvm,
-                             **self.vqe_options)
+        result = vqe.vqe_run(param_prog, cost_ham, stacked_params, qvm=self.qvm,**self.vqe_options)
         self.result = result
         betas = result.x[:self.steps]
         gammas = result.x[self.steps:2*self.steps]

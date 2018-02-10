@@ -123,9 +123,10 @@ if __name__ == "__main__":
     #         print('Device {} is online'.format(device.name))
     #
 
-    N = 6
+    N = 18
     Jij = np.random.random(N)
-    constraints = [ [0,1,3],[1,2,4],[1,3,4,5]]
+    constraints = [ [0,5,1],[1,6,2],[2,7,3], [3,8,4], [5,1,6,11], [6,2,7,12],[7,3,8,13],
+                    [8,4,9,14],[5,10,15,11],[6,11,16,12],[7,12,17,13]]
 
     inst = LHZ_qaoa(Jij,constraints,
                        steps=2, rand_seed=42, samples=None)
