@@ -37,5 +37,7 @@ The LHZ scheme makes use of constraints of length at least L>3. The all-to-all m
 
 
 [1] http://advances.sciencemag.org/content/1/9/e1500838
+
 [2] https://arxiv.org/abs/1802.01157
+
 [3] http://advances.sciencemag.org/content/2/10/e1601246
