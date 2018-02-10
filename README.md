@@ -28,7 +28,7 @@ and
 
 The code is a modified version of the MAXCUT example using LHZQAOA with a sequence U = U_x U_c U_p U_x U_c U_p. The required interactions can be implemented in a fully parallelized scheme of CNOT gates [2].  
 
-#19Qubit implementation
+# 19Qubit implementation
 
 The LHZ scheme makes use of constraints of length at least L>3. The all-to-all mapping constists of 3-body and 3-body constraints. The scheme is highly flexible to implement various logical connectivities and logical k-body interactions [3]. The particular connectivity of the Rigetti 19 qubit chip allows for an almost all-to-all connectivity of 7 qubits using the particular pattern shown. Here, N=7, K=18 and K-N+1=12. The number of constraints is 11, which means there is one constraint missing and a solution with global spin flip also possible. 
 
