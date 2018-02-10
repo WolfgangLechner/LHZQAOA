@@ -26,7 +26,16 @@ and
 
 <a href="https://www.codecogs.com/eqnedit.php?latex=U_p=&space;\prod_{i=1}^K&space;e^{\gamma&space;\sigma_z^{(i)}&space;}" target="_blank"><img src="https://latex.codecogs.com/gif.latex?U_p=&space;\prod_{i=1}^K&space;e^{\gamma&space;\sigma_z^{(i)}&space;}" title="U_p= \prod_{i=1}^K e^{\gamma \sigma_z^{(i)} }" /></a>
 
-The code is a modified version of the MAXCUT example using LHZQAOA with a sequence U = U_x U_c U_p U_x U_c U_p. The FOREST gate-compiler decomposes the constraint unitary U_c with the 4-body interactions to 6 CNOT gates and 1 RZ gate while no(!) ancillas are required. Remarkably, these CNOT gates are also on a flat graph. In the illustration, the red lines indicate the 4-body term in the top plaquette with the sequence: CNOT 1 3, CNOT 3 4, CNOT 4 5, RZ (-2) 5,  CNOT 4 5, CNOT 3 4, CNOT 1 3. The indices in the Figure are the same as in the code. 
+The code is a modified version of the MAXCUT example using LHZQAOA with a sequence U = U_x U_c U_p U_x U_c U_p. The required interactions can be implemented in a fully parallelized scheme of CNOT gates [2].  
+
+#19Qubit implementation
+
+The LHZ scheme makes use of constraints of length at least L>3. The all-to-all mapping constists of 3-body and 3-body constraints. The scheme is highly flexible to implement various logical connectivities and logical k-body interactions [3]. The particular connectivity of the Rigetti 19 qubit chip allows for an almost all-to-all connectivity of 7 qubits using the particular pattern shown. Here, N=7, K=18 and K-N+1=12. The number of constraints is 11, which means there is one constraint missing and a solution with global spin flip also possible. 
+
+![Alt text](img/r19q.png?raw=true "19 Qubit implementation")
 
 
- [1] http://advances.sciencemag.org/content/1/9/e1500838
+
+[1] http://advances.sciencemag.org/content/1/9/e1500838
+[2] https://arxiv.org/abs/1802.01157
+[3] http://advances.sciencemag.org/content/2/10/e1601246
