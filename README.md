@@ -30,10 +30,10 @@ The code is a modified version of the MAXCUT example using LHZQAOA with a sequen
 
 # 19Qubit implementation
 
-The LHZ scheme makes use of constraints of length at least L>3. The all-to-all mapping constists of 3-body and 3-body constraints. The scheme is highly flexible to implement various logical connectivities and logical k-body interactions [3]. The particular connectivity of the Rigetti 19 qubit chip allows for an almost all-to-all connectivity of 7 qubits using the particular pattern shown. Here, N=7, K=18 and K-N+1=12. The number of constraints is 11, which means there is one constraint missing and a solution with global spin flip also possible. 
+The LHZ scheme makes use of constraints of length at least L>3. The all-to-all mapping constists of 3-body and 4-body constraints. The scheme is highly flexible to implement various logical connectivities and logical k-body interactions [3]. The particular connectivity of the Rigetti 19 qubit chip allows for an all-to-all connectivity for N=4 and N=5 and almost all-to-all for N=6 and N=7 qubits using the particular patterns shown below. For N=7, K=18 and K-N+1=12. The number of constraints is 11, which means there is one constraint missing and a solution with global spin flip also possible. For smaller N the results are exact.  
 
 ![Alt text](img/r19qN.png?raw=true "19 Qubit implementation")
-Top: 19 qubit chip with connections indicated by solid lines. The two-digit number inside the circles indicate the logical connection the quibt represents. The digit right below the circles indicates the index of the qubit used in the code. Red triangles indicate 3-body interactions (closed loops of length 3) and red squares 4-body interactions (closed loops of 4). The graph represents a almost-all-to-all with K = 18 out of N(N-1)/2 = 21 possible connections. 
+Top: 19 qubit chip with connections indicated by solid lines. The two-digit number inside the circles indicate the logical connection the quibt represents. The digit right below the circles indicates the index of the qubit used in the code. Red triangles indicate 3-body interactions (closed loops of length 3) and red squares 4-body interactions (closed loops of 4).
 
 
 [1] http://advances.sciencemag.org/content/1/9/e1500838
