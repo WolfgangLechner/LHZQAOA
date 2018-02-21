@@ -32,7 +32,46 @@ from pyquil.api import get_devices
 CXN = api.QVMConnection()
 #CXN = api.QPUConnection()
 
+rand_seed = 1
 
+#Mapping from n logical qubits to n physical qubits
+nmapping = {4: 6, 5: 10, 6: 14, 7: 18}
+
+#For each n logical we use K-N+1 constraints. Labels as on the 19qubit chip
+cmappingqpu = {4: [[17, 18, 12],
+                  [18, 19, 13],
+                  [12, 18, 13, 8]],
+              5: [[16, 17, 11],
+                  [17, 18, 12],
+                  [18, 19, 13],
+                  [11, 17, 12, 7],
+                  [12, 18, 13, 8],
+                  [7, 12, 8, 2]],
+              6: [[15, 16, 10],
+                  [16, 17, 11],
+                  [17, 18, 12],
+                  [18, 19, 13],
+                  [10, 16, 11, 6],
+                  [11, 17, 12, 7],
+                  [12, 18, 13, 8],
+                  [6, 11, 7, 1],
+                  [7, 12, 8, 2]],
+              7: [[15, 16, 10],
+                  [16, 17, 11],
+                  [17, 18, 12],
+                  [18, 19, 13],
+                  [10, 16, 11, 6],
+                  [11, 17, 12, 7],
+                  [12, 18, 13, 8],
+                  [13, 19, 14, 9],
+                  [5, 10, 6, 0],
+                  [6, 11, 7, 1],
+                  [7, 12, 8, 2]]}
+
+#test for constraint mapping for the qvm with labels from 0 to 5
+cmappingqvm = {4: [[0, 1, 3],
+                   [1, 2, 4],
+                   [1, 3, 4, 5]]}
 
 def print_fun(x):
     print(x)
@@ -73,11 +112,8 @@ def LHZ_qaoa(Jij, constraints, steps=1, rand_seed=None, connection=None, samples
         term += PauliTerm("I", 0, -0.5)
         constraint_operators.append(term)
 
-
-
     for i in range(len(Jij)):
         localfield_operator.append(PauliSum([PauliTerm("Z", i, Jij[i])]))
-
 
     for i in range(len(Jij)):
         driver_operators.append(PauliSum([PauliTerm("X", i, -1.0)]))
@@ -93,13 +129,11 @@ def LHZ_qaoa(Jij, constraints, steps=1, rand_seed=None, connection=None, samples
         vqe_option = {'disp': print_fun, 'return_all': True,
                       'samples': samples}
 
-
     for cost_pauli_sum in constraint_operators:
         for term in cost_pauli_sum.terms:
             print(term)
             p = exponential_map(term)
             print (p(1))
-
 
     qaoa_inst = LHZQAOA(connection, len(Jij), steps=steps, constraint_ham=constraint_operators, localfield_ham = localfield_operator,
                      ref_hamiltonian=driver_operators, store_basis=True,
@@ -111,8 +145,6 @@ def LHZ_qaoa(Jij, constraints, steps=1, rand_seed=None, connection=None, samples
                      minimizer_kwargs=minimizer_kwargs,
                      vqe_options=vqe_option)
 
-
-
     return qaoa_inst
 
 
@@ -123,18 +155,18 @@ if __name__ == "__main__":
     #         print('Device {} is online'.format(device.name))
     #
 
-    N = 18
+    nlogic = 4
+    N = nmapping[nlogic]
+    constraints = cmappingqvm[nlogic]
     Jij = np.random.random(N)
-    constraints = [ [0,5,1],[1,6,2],[2,7,3], [3,8,4], [5,1,6,11], [6,2,7,12],[7,3,8,13],
-                    [8,4,9,14],[5,10,15,11],[6,11,16,12],[7,12,17,13]]
 
-    inst = LHZ_qaoa(Jij,constraints,
-                       steps=2, rand_seed=42, samples=None)
+    inst = LHZ_qaoa(Jij,constraints, steps=2, rand_seed=rand_seed, samples=None)
+
     betas, gammas, omegas = inst.get_angles()
-    print("here")
+
     probs = inst.probabilities(np.hstack((betas, gammas,omegas)))
-    for state, prob in zip(inst.states, probs):
-        print(state, prob)
+    # for state, prob in zip(inst.states, probs):
+    #     print(state, prob)
 
     print("Most frequent bitstring from sampling")
     most_freq_string, sampling_results = inst.get_string(
