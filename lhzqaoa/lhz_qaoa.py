@@ -75,8 +75,7 @@ class LHZQAOA(object):
         self.n_qubits = n_qubits
         self.nstates = 2 ** n_qubits
         if store_basis:
-            self.states = [np.binary_repr(i, width=self.n_qubits) for i in range(
-                           self.nstates)]
+            self.states = [np.binary_repr(i, width=self.n_qubits) for i in range(self.nstates)]
         self.betas = init_betas
         self.gammas = init_gammas
         self.omegas = init_omegas
