@@ -319,7 +319,7 @@ def getenery(state,Jij,constraints):
         e = 1.0
         for con in c:
             e *= (float(int(state[con]))*2.0-1.0)
-        sume += 4.0*e
+        sume += -4.0*e
     lfe = 0.0
     for j in range(len(Jij)):
         lfe -= Jij[j] * (int(state[j]) * 2 - 1)
