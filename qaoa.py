@@ -24,16 +24,18 @@ import pyquil.api as api
 from pyquil.paulis import PauliTerm, PauliSum,exponential_map
 import networkx as nx
 from scipy.optimize import minimize
-from grove.pyqaoa.qaoa import QAOA
+# from grove.pyqaoa.qaoa import QAOA
+
 from lhzqaoa.lhz_qaoa import LHZQAOA
+from lhzqaoa.sg_qaoa import SGQAOA
 
 
 from pyquil.api import get_devices
 
-CXN = api.QVMConnection()
+rand_seed = 5
+CXN = api.QVMConnection(random_seed=rand_seed)
 #CXN = api.QPUConnection()
 
-rand_seed = 3
 np.random.seed(rand_seed)
 
 
@@ -126,10 +128,9 @@ def LHZ_qaoa(Jij, constraints, steps=1, rand_seed=None, connection=None, samples
     driver_operators = []
 
     for c in constraints:
-        term = PauliTerm("Z", c[0], 2.0)
+        term = PauliTerm("Z", c[0], -4.0)
         for item in c[1:]:
             term *= PauliTerm("Z", item, 1.0)
-        # term += PauliTerm("I", 0, -0.5)
         constraint_operators.append(PauliSum([term]))
 
     for i in range(len(Jij)):
@@ -207,7 +208,7 @@ def spinglass_qaoa(Jij, indextopairs, nlogic, steps=1, rand_seed=None, connectio
         vqe_option = {'disp': print_fun, 'return_all': True,
                       'samples': samples}
 
-    qaoa_inst = QAOA(connection, nlogic, steps=steps, cost_ham=interaction_operators,
+    qaoa_inst = SGQAOA(connection, nlogic, steps=steps, cost_ham=interaction_operators,
                      ref_hamiltonian=driver_operators, store_basis=True,
                      rand_seed=rand_seed,
                      init_betas=initial_beta,
@@ -219,6 +220,68 @@ def spinglass_qaoa(Jij, indextopairs, nlogic, steps=1, rand_seed=None, connectio
     return qaoa_inst
 
 
+
+def spinglasslhz_qaoa(Jij, constraints, steps=1, rand_seed=None, connection=None, samples=None,
+                initial_beta=None, initial_gamma=None, initial_omega=None,  minimizer_kwargs=None,
+                vqe_option=None):
+    """
+    Spinglass set up
+
+    :param Jij: the interaction matrix as a list
+    :param steps: (Optional. Default=1) Trotterization order for the QAOA algorithm.
+    :param rand_seed: (Optional. Default=None) random seed when beta and gamma angles
+        are not provided.
+    :param connection: (Optional) connection to the QVM. Default is None.
+    :param samples: (Optional. Default=None) VQE option. Number of samples
+        (circuit preparation and measurement) to use in operator averaging.
+    :param initial_beta: (Optional. Default=None) Initial guess for beta parameters.
+    :param initial_gamma: (Optional. Default=None) Initial guess for gamma parameters.
+    :param intital_omega: (Optional. Default=None) Initial guess for omega parameters.
+    :param minimizer_kwargs: (Optional. Default=None). Minimizer optional arguments.  If None set to
+        ``{'method': 'Nelder-Mead', 'options': {'ftol': 1.0e-2, 'xtol': 1.0e-2, 'disp': False}``
+    :param vqe_option: (Optional. Default=None). VQE optional arguments.  If None set to
+        ``vqe_option = {'disp': print_fun, 'return_all': True, 'samples': samples}``
+
+    """
+
+    interaction_operators = []
+    driver_operators = []
+
+    for c in constraints:
+        term = PauliTerm("Z", c[0], -4.0)
+        for item in c[1:]:
+            term *= PauliTerm("Z", item, 1.0)
+        interaction_operators.append(PauliSum([term]))
+
+    for i in range(len(Jij)):
+        interaction_operators.append(PauliSum([PauliTerm("Z", i, Jij[i])]))
+
+
+    for i in range(nlogic):
+        driver_operators.append(PauliSum([PauliTerm("X", i, -1.0)]))
+
+    if connection is None:
+        connection = CXN
+
+    if minimizer_kwargs is None:
+        minimizer_kwargs = {'method': 'Nelder-Mead',
+                            'options': {'ftol': 1.0e-2, 'xtol': 1.0e-2,
+                                        'disp': False}}
+    if vqe_option is None:
+        vqe_option = {'disp': print_fun, 'return_all': True,
+                      'samples': samples}
+
+    qaoa_inst = SGQAOA(connection, len(Jij), steps=steps, cost_ham=interaction_operators,
+                     ref_hamiltonian=driver_operators, store_basis=True,
+                     rand_seed=rand_seed,
+                     init_betas=initial_beta,
+                     init_gammas=initial_gamma,
+                     minimizer=minimize,
+                     minimizer_kwargs=minimizer_kwargs,
+                     vqe_options=vqe_option)
+
+    return qaoa_inst
+
 def getmaxprob(states, probs):
     maxprob = 0
     maxstate = 0
@@ -229,8 +292,38 @@ def getmaxprob(states, probs):
 
     return maxstate,maxprob
 
+def printprobs(states, probs):
+    tup = []
+    for state, prob in zip(states, probs):
 
+        tup.append([prob[0].real,state])
 
+    sorted_by_second = sorted(tup, key=lambda tup: tup[0])
+    for item in sorted_by_second:
+        print(item[0],item[1])
+
+def printprobslhz(states, probs,Jij,constraints):
+    tup = []
+    for state, prob in zip(states, probs):
+
+        tup.append([prob[0].real,state])
+
+    sorted_by_second = sorted(tup, key=lambda tup: tup[0])
+    for item in sorted_by_second:
+
+        print(item[0],item[1],getenery(item[1],Jij,constraints))
+
+def getenery(state,Jij,constraints):
+    sume = 0
+    for c in constraints:
+        e = 1.0
+        for con in c:
+            e *= (float(int(state[con]))*2.0-1.0)
+        sume += 4.0*e
+    lfe = 0.0
+    for j in range(len(Jij)):
+        lfe -= Jij[j] * (int(state[j]) * 2 - 1)
+    return sume+lfe
 
 def getgroundstate(indextopairs,Jij,nlogic):
     mine = 1000.0
@@ -255,26 +348,37 @@ if __name__ == "__main__":
     nlogic = 4
     N = nmapping[nlogic]
     constraints = cmappingqvm[nlogic]
-    Jij = np.random.random(N)
+    Jij = (np.random.random(N)-0.5)*2.0
 
-
+    print(Jij)
     print(getgroundstate(indextopairmap[nlogic],Jij,nlogic))
-
 
     #QAOA with fully connected spin glass
     #This cannot be implemented but serves as a base comparison
-    spinglassinst = spinglass_qaoa(Jij,indextopairmap[nlogic], nlogic, steps=2, rand_seed=rand_seed, samples=None)
+    spinglassinst = spinglass_qaoa(Jij,indextopairmap[nlogic], nlogic, steps=5, rand_seed=rand_seed, samples=None)
     betas, gammas = spinglassinst.get_angles()
     spinglassprobs = spinglassinst.probabilities(np.hstack((betas, gammas)))
 
     # Comparison with LHZQAOA
-    lhzinst = LHZ_qaoa(Jij,constraints, steps=2, rand_seed=rand_seed, samples=None)
+    lhzinst = LHZ_qaoa(Jij,constraints, steps=5, rand_seed=rand_seed, samples=None)
     betas, gammas, omegas = lhzinst.get_angles()
     lhzprobs = lhzinst.probabilities(np.hstack((betas, gammas,omegas)))
 
+    # Comparison with LHZQAOA
+    lhzsginst = spinglasslhz_qaoa(Jij,constraints, steps=5, rand_seed=rand_seed, samples=None)
+    betas, gammas = lhzsginst.get_angles()
+    lhzsgprobs = lhzsginst.probabilities(np.hstack((betas, gammas)))
 
     lhzmax,lhzmaxprob = getmaxprob(lhzinst.states, lhzprobs)
     sgmax, sgmaxprob = getmaxprob(spinglassinst.states, spinglassprobs)
+    lsgmax, lsgmaxprob = getmaxprob(lhzsginst.states, lhzsgprobs)
 
-    print (lhzmax,lhzmaxprob,sgmax,sgmaxprob)
+    printprobs(spinglassinst.states,spinglassprobs)
+    print("\n")
+    printprobslhz(lhzinst.states, lhzprobs,Jij,constraints)
+    print("\n")
+    printprobs(lhzsginst.states, lhzsgprobs)
+
+
+    #print (lhzmax,lhzmaxprob,sgmax,sgmaxprob)
 

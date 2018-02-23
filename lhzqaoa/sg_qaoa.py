@@ -24,11 +24,9 @@ from pyquil.paulis import exponential_map, PauliSum
 from functools import reduce
 
 
-class LHZQAOA(object):
+class SGQAOA(object):
     def __init__(self, qvm, n_qubits, steps=1, init_betas=None,
-                 init_gammas=None, init_omegas = None,
-                 constraint_ham=[],
-                 localfield_ham = [],
+                 init_gammas=None, cost_ham=[],
                  ref_hamiltonian=[], driver_ref=None,
                  minimizer=None, minimizer_args=[],
                  minimizer_kwargs={}, rand_seed=None,
@@ -47,9 +45,7 @@ class LHZQAOA(object):
                            mixing terms. Default=None.
         :param init_gammas: (list) Initial values for the gamma parameters on the
                             cost function. Default=None.
-        :param constraint_ham: list of clauses in the cost function. Must be
-                    PauliSum objects
-        :param localfield_ham: list of local fields in lhz in the cost function. Must be
+        :param cost_ham: list of clauses in the cost function. Must be
                     PauliSum objects
         :param ref_hamiltonian: list of clauses in the cost function. Must be
                     PauliSum objects
@@ -75,10 +71,10 @@ class LHZQAOA(object):
         self.n_qubits = n_qubits
         self.nstates = 2 ** n_qubits
         if store_basis:
-            self.states = [np.binary_repr(i, width=self.n_qubits) for i in range(self.nstates)]
+            self.states = [np.binary_repr(i, width=self.n_qubits) for i in range(
+                           self.nstates)]
         self.betas = init_betas
         self.gammas = init_gammas
-        self.omegas = init_omegas
         self.vqe_options = vqe_options
 
         if driver_ref is not None:
@@ -93,21 +89,20 @@ class LHZQAOA(object):
                 ref_prog.inst(H(i))
             self.ref_state_prep = ref_prog
 
-        if not isinstance(constraint_ham, (list, tuple)):
+        if not isinstance(cost_ham, (list, tuple)):
             raise TypeError("""cost_hamiltonian must be a list of PauliSum
                                objects""")
-        if not all([isinstance(x, PauliSum) for x in constraint_ham]):
+        if not all([isinstance(x, PauliSum) for x in cost_ham]):
             raise TypeError("""cost_hamiltonian must be a list of PauliSum
                                    objects""")
         else:
-            self.constraint_ham = constraint_ham
-            self.localfield_ham = localfield_ham
+            self.cost_ham = cost_ham
 
         if not isinstance(ref_hamiltonian, (list, tuple)):
-            raise TypeError("""driver_hamiltonian must be a list of PauliSum
+            raise TypeError("""cost_hamiltonian must be a list of PauliSum
                                objects""")
         if not all([isinstance(x, PauliSum) for x in ref_hamiltonian]):
-            raise TypeError("""driver_hamiltonian must be a list of PauliSum
+            raise TypeError("""cost_hamiltonian must be a list of PauliSum
                                    objects""")
         else:
             self.ref_ham = ref_hamiltonian
@@ -132,9 +127,7 @@ class LHZQAOA(object):
         if self.betas is None:
             self.betas = np.random.uniform(0, np.pi, self.steps)[::-1]
         if self.gammas is None:
-            self.gammas = np.random.uniform(0, 2.0 * np.pi, self.steps)
-        if self.omegas is None:
-            self.omegas = np.random.uniform(0, 2.0 * np.pi, self.steps)
+            self.gammas = np.random.uniform(0, 2*np.pi, self.steps)
 
     def get_parameterized_program(self):
         """
@@ -143,57 +136,44 @@ class LHZQAOA(object):
 
         :returns: a function
         """
-        constraint_para_programs = []
-        localfield_para_programs = []
+        cost_para_programs = []
         driver_para_programs = []
 
         for idx in range(self.steps):
-            constraint_list = []
-            localfield_list = []
+            cost_list = []
             driver_list = []
+            for cost_pauli_sum in self.cost_ham:
+                for term in cost_pauli_sum.terms:
+                    cost_list.append(exponential_map(term))
+
             for driver_pauli_sum in self.ref_ham:
                 for term in driver_pauli_sum.terms:
                     driver_list.append(exponential_map(term))
 
-            for const_pauli_sum in self.constraint_ham:
-                for term in const_pauli_sum.terms:
-                    constraint_list.append(exponential_map(term))
-
-            for localfield_pauli_sum in self.localfield_ham:
-                for term in localfield_pauli_sum.terms:
-                    localfield_list.append(exponential_map(term))
-
+            cost_para_programs.append(cost_list)
             driver_para_programs.append(driver_list)
-            constraint_para_programs.append(constraint_list)
-            localfield_para_programs.append(localfield_list)
-
 
         def psi_ref(params):
             """Construct a Quil program for the vector (beta, gamma).
 
-            :param params: array of 3 . p angles, betas first, then gammas, then omega
+            :param params: array of 2 . p angles, betas first, then gammas
             :return: a pyquil program object
             """
-            if len(params) != 3*self.steps:
+            if len(params) != 2*self.steps:
                 raise ValueError("""params doesn't match the number of parameters set
                                     by `steps`""")
-
             betas = params[:self.steps]
-            gammas = params[self.steps:2*self.steps]
-            omegas = params[2*self.steps:]
+            gammas = params[self.steps:]
 
             prog = pq.Program()
             prog += self.ref_state_prep
             for idx in range(self.steps):
-
-                for fprog in constraint_para_programs[idx]:
+                for fprog in cost_para_programs[idx]:
                     prog += fprog(gammas[idx])
-
-                for fprog in localfield_para_programs[idx]:
-                    prog += fprog(omegas[idx])
 
                 for fprog in driver_para_programs[idx]:
                     prog += fprog(betas[idx])
+
             return prog
 
         return psi_ref
@@ -207,21 +187,19 @@ class LHZQAOA(object):
         :returns: ([list], [list]) A tuple of the beta angles and the gamma
                   angles for the optimal solution.
         """
-        stacked_params = np.hstack((self.betas, self.gammas, self.omegas))
+        stacked_params = np.hstack((self.betas, self.gammas))
         vqe = VQE(self.minimizer, minimizer_args=self.minimizer_args,
                   minimizer_kwargs=self.minimizer_kwargs)
-        cost_ham = reduce(lambda x, y: x + y, (self.constraint_ham + self.localfield_ham))
+        cost_ham = reduce(lambda x, y: x + y, self.cost_ham)
         print(cost_ham)
         # maximizing the cost function!
         param_prog = self.get_parameterized_program()
-
-        result = vqe.vqe_run(param_prog, cost_ham, stacked_params, qvm=self.qvm,**self.vqe_options)
+        result = vqe.vqe_run(param_prog, cost_ham, stacked_params, qvm=self.qvm,
+                             **self.vqe_options)
         self.result = result
         betas = result.x[:self.steps]
-        gammas = result.x[self.steps:2*self.steps]
-        omegas = result.x[2*self.steps:]
-
-        return betas, gammas, omegas
+        gammas = result.x[self.steps:]
+        return betas, gammas
 
     def probabilities(self, angles):
         """
@@ -233,8 +211,7 @@ class LHZQAOA(object):
         if isinstance(angles, list):
             angles = np.array(angles)
 
-
-        assert angles.shape[0] == 3 * self.steps, "angles must be 3 * steps"
+        assert angles.shape[0] == 2 * self.steps, "angles must be 2 * steps"
 
         param_prog = self.get_parameterized_program()
         prog = param_prog(angles)
@@ -245,7 +222,7 @@ class LHZQAOA(object):
             probs[xx] = np.conj(wf[xx]) * wf[xx]
         return probs
 
-    def get_string(self, betas, gammas, omegas, samples=100):
+    def get_string(self, betas, gammas, samples=100):
         """
         Compute the most probable string.
 
@@ -264,7 +241,7 @@ class LHZQAOA(object):
         if samples <= 0 and not isinstance(samples, int):
             raise ValueError("samples variable must be positive integer")
         param_prog = self.get_parameterized_program()
-        stacked_params = np.hstack((betas, gammas,omegas))
+        stacked_params = np.hstack((betas, gammas))
         sampling_prog = param_prog(stacked_params)
         for i in range(self.n_qubits):
             sampling_prog.measure(i, [i])
